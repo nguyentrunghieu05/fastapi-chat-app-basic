@@ -41,7 +41,7 @@
     const socket = new WebSocket(`ws://127.0.0.1:8000/ws/${username}`);
 
     socket.onopen = () => {
-      console.log("✅ Kết nối server thành công");
+      console.log(" Kết nối server thành công");
       addMessage("System", "Chào mừng bạn đến với phòng chat! 👋", true);
     };
 
@@ -51,12 +51,12 @@
     };
 
     socket.onerror = (error) => {
-      console.error("❗ Lỗi kết nối:", error);
+      console.error(" Lỗi kết nối:", error);
       addMessage("System", "Lỗi kết nối. Vui lòng thử lại sau.", true);
     };
 
     socket.onclose = () => {
-      console.log("❌ Kết nối server đã đóng");
+      console.log(" Kết nối server đã đóng");
       addMessage("System", "Kết nối đã đóng. Vui lòng tải lại trang để kết nối lại.", true);
     };
 

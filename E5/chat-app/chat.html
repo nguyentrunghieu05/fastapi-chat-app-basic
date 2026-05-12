@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Ứng dụng chat</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; box-sizing: border-box; }
+    #chat-box { max-width: 600px; width: 100%; margin: 0 auto; background: #fff; border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; height: 70vh; }
+    #messages { list-style: none; padding: 15px; margin: 0; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; }
+    #messages li { padding: 10px 15px; border-radius: 20px; max-width: 80%; word-wrap: break-word; }
+    .me { background: #007bff; color: white; align-self: flex-end; }
+    .me strong { color: #cce5ff; }
+    .other { background: #e9ecef; color: #343a40; align-self: flex-start; }
+    .other strong { color: #495057; }
+    .system { background: #ffc107; font-style: italic; text-align: center; color: #343a40; align-self: center; width: 100%; border-radius: 0; padding: 10px; margin: 0; }
+    #input-area { display: flex; padding: 10px; background: #f8f9fa; border-top: 1px solid #dee2e6; border-radius: 0 0 10px 10px; }
+    #msgInput { flex: 1; padding: 12px; border: 1px solid #ced4da; border-radius: 25px; outline: none; transition: border-color 0.3s; }
+    #msgInput:focus { border-color: #007bff; }
+    button { padding: 12px 25px; border: none; background: #007bff; color: white; border-radius: 25px; cursor: pointer; margin-left: 10px; font-weight: bold; transition: background-color 0.3s; }
+    button:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+
+  <div id="chat-box">
+    <ul id="messages"></ul>
+    <div id="input-area">
+      <input type="text" id="msgInput" placeholder="Nhập tin nhắn..." onkeypress="if(event.keyCode==13) sendMessage()" />
+      <button onclick="sendMessage()">Gửi</button>
+    </div>
+  </div>
+
+  <script>
+    let username = prompt("Nhập tên của bạn:");
+    if (!username || username.trim() === "") {
+        username = `user_${Math.random().toString(36).substr(2, 9)}`;
+        console.log("Không nhập tên, sử dụng tên mặc định:", username);
+        addMessage("System", `Chào mừng, bạn sẽ được nhận diện là ${username}`, true);
+    }
+    
+    const socket = new WebSocket(`ws://127.0.0.1:8000/ws/${username}`);
+
+    socket.onopen = () => {
+      console.log("✅ Kết nối server thành công");
+      addMessage("System", "Chào mừng bạn đến với phòng chat! 👋", true);
+    };
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      addMessage(data.username, data.message, data.username === username);
+    };
+
+    socket.onerror = (error) => {
+      console.error("❗ Lỗi kết nối:", error);
+      addMessage("System", "Lỗi kết nối. Vui lòng thử lại sau.", true);
+    };
+
+    socket.onclose = () => {
+      console.log("❌ Kết nối server đã đóng");
+      addMessage("System", "Kết nối đã đóng. Vui lòng tải lại trang để kết nối lại.", true);
+    };
+
+    function addMessage(user, message, isMe) {
+      const messagesList = document.getElementById("messages");
+      let li = document.createElement("li");
+      if (user === "System") {
+        li.className = "system";
+        li.innerText = message;
+      } else {
+        li.className = isMe ? "me" : "other";
+        li.innerHTML = `<strong>${user}:</strong> ${message}`;
+      }
+      messagesList.appendChild(li);
+      messagesList.scrollTop = messagesList.scrollHeight;
+    }
+
+    function sendMessage() {
+      const msgInput = document.getElementById("msgInput");
+      const message = msgInput.value;
+      if (message.trim() !== "") {
+        socket.send(message);
+        msgInput.value = "";
+      }
+    }
+  </script>
+
+</body>
+</html>
